@@ -1,4 +1,4 @@
-# zy-skills
+# work-skills
 
 工作中用到的 Claude / coding agent skills 集合。每个子目录是一个独立 skill，可单独取用。
 
@@ -34,20 +34,25 @@ cp -R spec-to-tested-feature /path/to/your-project/.claude/skills/
 6. **自动测试 + 自愈** — 自动判定项目类型，Web 前端用 Chrome MCP、微信小程序用小程序 MCP 跑测试，发现问题自动修复重跑（有上限，到限报告不强行标过）。
 7. **回归文档** — 产出测试回归文档，结束。
 
-依赖：markitdown（脚本自动安装）、Figma MCP（读设计稿，可选）、Chrome MCP 或小程序 MCP（自动化测试）。
+**stf-init 命令（初始化工具）**：正式开干前可先说 `stf-init`（或 Claude Code 里用 `/stf-init` 斜杠命令，加前缀以避开内置的 `/init`），它只准备本 skill 依赖的工具、不解析需求——检测并自动安装能命令行装的（markitdown / 小程序 MCP），对只能人工的（Chrome 扩展、Figma access token）给出步骤和 token 获取方式。
+
+**跨端框架支持**：自动识别 Taro（`@tarojs/*`）/ uni-app（`@dcloudio/*`），会先问测哪个目标端（小程序 / H5），并按项目 `package.json` 里真实的构建脚本先编译再测——小程序测试指向编译产物目录而非源码根。
+
+依赖：markitdown（脚本自动安装）、Figma MCP（读设计稿，可选）、Chrome MCP 或小程序 MCP（自动化测试，推荐 [wechat-devtools-mcp](https://github.com/WaterTian/wechat-devtools-mcp)）。各工具的检测/安装/token 获取详见 skill 内 `SKILL.md` 与 `references/`。
 
 产出物统一放在目标项目的 `docs/` 下：`technical-design.md`、`change-log.md`、`code-review.md`、`test-cases.md`、`test-regression.md`。
 
 ## 目录约定
 
 ```
-zy-skills/
+work-skills/
 ├── README.md
 └── <skill-name>/
     ├── SKILL.md          # 必需：触发条件 + 工作流程
     ├── scripts/          # 可选：可执行脚本
     ├── references/       # 可选：按需加载的参考文档
-    └── assets/           # 可选：模板等产出物素材
+    ├── assets/           # 可选：模板等产出物素材
+    └── commands/         # 可选：Claude Code 斜杠命令（放到 .claude/commands/ 下生效）
 ```
 
 新增 skill 时，建一个同名目录、写好 `SKILL.md`，并在上面的「skill 列表」表格里补一行。
