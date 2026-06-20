@@ -20,16 +20,16 @@ cp -R spec-to-tested-feature /path/to/your-project/.claude/skills/
 
 | Skill | 作用 | 适用场景 |
 |-------|------|----------|
-| [spec-to-tested-feature](./spec-to-tested-feature) | 需求驱动的端到端开发工作流：解析需求文档 + Figma 设计稿 → 技术文档（人工卡点）→ 开发 → 严格代码 review → 测试用例 → 自动化测试自愈 → 回归文档 | 拿到需求文档/设计稿，需要"从需求到测试一条龙"完成 Web 前端或微信小程序功能开发 |
+| [spec-to-tested-feature](./spec-to-tested-feature) | 需求驱动的端到端开发工作流：解析需求文档 + Figma 设计稿 → 技术文档（卡点1）→ 开发 → 严格代码 review（卡点2）→ 测试用例 → 自动化测试自愈 → 回归文档 | 拿到需求文档/设计稿，需要"从需求到测试一条龙"完成 Web 前端或微信小程序功能开发 |
 
 ### spec-to-tested-feature
 
-七阶段、一个人工卡点的开发流水线，跑在支持 MCP 的 coding agent 上：
+七阶段、两个人工卡点的开发流水线，跑在支持 MCP 的 coding agent 上：
 
 1. **解析输入** — 用 [markitdown](https://github.com/microsoft/markitdown) 把需求文档（pptx/pdf/docx/md/txt）转成 md（自动检测/安装/验证）；用 Figma MCP 读取设计稿；通读整个项目。
-2. **技术文档** —【唯一人工卡点】产出技术设计文档，停下确认需求理解与方案，确认后才开发。
+2. **技术文档** —【人工卡点1】产出技术设计文档，停下确认需求理解与方案，确认后才开发。
 3. **开发** — 按需求 + 设计稿还原 UI，产出代码改动文档。
-4. **严格代码 review** — 测试前从需求一致性 / 正确性边界 / 安全 / 项目约定 / 可维护性 / 性能六个维度严查，阻塞级问题当场修复清零，产出审查报告。
+4. **严格代码 review** — 从需求一致性 / 正确性边界 / 安全 / 项目约定 / 可维护性 / 性能六个维度严查，阻塞级问题当场修复清零，产出审查报告。【人工卡点2】测试前停下，问是否还要改代码、是否做开发页面与 Figma 设计稿的截图比对，放行后才测试。
 5. **测试用例** — 基于验收标准与交互状态产出用例文档。
 6. **自动测试 + 自愈** — 自动判定项目类型，Web 前端用 Chrome MCP、微信小程序用小程序 MCP 跑测试，发现问题自动修复重跑（有上限，到限报告不强行标过）。
 7. **回归文档** — 产出测试回归文档，结束。
@@ -38,7 +38,7 @@ cp -R spec-to-tested-feature /path/to/your-project/.claude/skills/
 
 **跨端框架支持**：自动识别 Taro（`@tarojs/*`）/ uni-app（`@dcloudio/*`），会先问测哪个目标端（小程序 / H5），并按项目 `package.json` 里真实的构建脚本先编译再测——小程序测试指向编译产物目录而非源码根。
 
-依赖：markitdown（脚本自动安装）、Figma MCP（读设计稿，可选）、Chrome MCP 或小程序 MCP（自动化测试，推荐 [wechat-devtools-mcp](https://github.com/WaterTian/wechat-devtools-mcp)）。各工具的检测/安装/token 获取详见 skill 内 `SKILL.md` 与 `references/`。
+依赖：markitdown（脚本自动安装）、Figma MCP（读设计稿，可选）、Chrome MCP 或小程序 MCP（自动化测试，小程序推荐 [weapp-dev-mcp](https://github.com/yfmeii/weapp-dev-mcp)，基于 miniprogram-automator + WebSocket 长连接，复杂项目更抗卡）。各工具的检测/安装/token 获取详见 skill 内 `SKILL.md` 与 `references/`。
 
 产出物统一放在目标项目的 `docs/` 下：`technical-design.md`、`change-log.md`、`code-review.md`、`test-cases.md`、`test-regression.md`。
 

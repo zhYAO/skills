@@ -1,71 +1,72 @@
 # 微信小程序测试（小程序 MCP）
 
-用于阶段 6 测试微信小程序项目。推荐用 [`wechat-devtools-mcp`](https://github.com/WaterTian/wechat-devtools-mcp)：把微信开发者工具 CLI 封装成 MCP，提供 8 个聚合工具覆盖小程序开发/测试/调试全流程。工具名形如 `wechat_ide` / `wechat_automator` / `wechat_inspector` / `wechat_screenshot` / `wechat_navigate` / `wechat_file` 等（按当前环境实际可用的为准）。
+用于阶段 6 测试微信小程序项目。推荐用 [`weapp-dev-mcp`](https://github.com/yfmeii/weapp-dev-mcp)（npm 包 `@yfme/weapp-dev-mcp`）：基于官方 `miniprogram-automator` SDK + WebSocket 长连接驱动微信开发者工具。相比 CLI 封装类方案，它连一次后复用同一连接、不反复启 CLI，**在复杂项目里更不容易卡死/超时**，并提供显式的超时与重试参数。工具名形如 `mp_*`（应用级）、`page_*`（页面级）、`element_*`（元素级）。
 
 ## 缺失检查 + 自动安装
 
-进入小程序测试前，先确认小程序 MCP 是否已连接（列出可用工具，找名字含 `wechat` / `miniprogram` 的）。**若没有，先问用户是否要现在自动安装**，得到同意后再装——安装会改全局工具环境和 agent 的 MCP 配置，不要不打招呼就动。
+进入小程序测试前，先确认小程序 MCP 是否已连接（列出可用工具，找名字含 `mp_` / `page_` / `element_` 或 `weapp` 的）。**若没有，先问用户是否要现在自动安装**，得到同意后再装——安装会改 agent 的 MCP 配置，不要不打招呼就动。
 
-征得同意后：
-
-```bash
-# 1. 安装 uv（已有可跳过）
-pip install uv
-
-# 2. 一键装到全局隔离环境
-uv tool install wechat-devtools-mcp --force
-
-# 验证
-uv tool list   # 应能看到 wechat-devtools-mcp
-```
-
-然后把 MCP 配进 agent（不同编辑器配置文件不同，下面是通用形态，路径按用户实际安装位置填，Windows 下反斜杠要转义）：
+这个包用 npx 直接跑，无需全局安装，把它配进 agent 的 MCP 配置即可（推荐用 connect 模式连一个已经开着的开发者工具，最稳）：
 
 ```jsonc
 {
   "mcpServers": {
-    "wechat-devtools": {
-      "command": "uvx",
-      "args": ["wechat-devtools-mcp"],
+    "weapp-dev": {
+      "command": "npx",
+      "args": ["-y", "@yfme/weapp-dev-mcp"],
       "env": {
-        "WECHAT_DEVTOOLS_CLI": "<微信开发者工具 CLI 路径，如 .../cli.bat 或 macOS 下的 cli>",
-        "WECHAT_PROJECT_PATH": "<小程序项目绝对路径>"
+        "WEAPP_WS_ENDPOINT": "ws://localhost:9420"
       }
     }
   }
 }
 ```
 
-两个环境变量都必填：`WECHAT_DEVTOOLS_CLI`（开发者工具 CLI 绝对路径）、`WECHAT_PROJECT_PATH`（小程序项目绝对路径）。配完通常要让 agent 重新加载 MCP 配置才能看到新工具。
+前置要求：本地已装 Node.js 18+、装好微信开发者工具且支持命令行（`cli`/`cli.bat`）、有可在开发者工具中打开的项目。配完通常要让 agent 重新加载 MCP 配置才能看到新工具。
 
-> **跨端框架（Taro / uni-app）特别注意**：`WECHAT_PROJECT_PATH` 必须指向**编译产物目录**（Taro 一般是 `dist/`，但可能被项目改过），不是 `src/` 源码根目录。务必先按项目 `package.json` 里真实的小程序构建脚本编译出产物（见 SKILL.md 的 6a-编译前置），再把路径指过去。
+> **Claude Code 建议免确认调用**：用 Claude Code 时，工具调用的权限弹窗可能打断与开发者工具的连接、导致日志获取不连贯。可在项目 `.claude/settings.local.json` 的 `permissions.allow` 里把 `mcp__weapp-dev__*` 系列工具加进去免确认（具体工具名前缀以你 MCP 配置里的服务器名为准）。
 
-升级：`uv tool upgrade wechat-devtools-mcp`。
+> **跨端框架（Taro / uni-app）特别注意**：开发者工具打开/连接的必须是**编译产物目录**（Taro 一般是 `dist/`，但可能被项目改过），不是 `src/` 源码根目录。务必先按项目 `package.json` 里真实的小程序构建脚本编译出产物（见 SKILL.md 的 6a-编译前置），再让开发者工具打开它。
 
-## 准备（无论自动还是手动安装，都要做这步）
+## 准备：启动开发者工具并开启自动化
 
-1. **必须开启微信开发者工具的服务端口**：`设置` → `安全设置` → `服务端口` → 开启。不开端口 AI 下不了指令，最常见的报错就是 `CLI_TIMEOUT`。
-2. 用 `wechat_ide(action='open')` 启动/连接 IDE；需要采集运行时日志时用 `wechat_ide(action='open', cdp_enabled=True)`，它会以调试模式启动。
-3. 若 MCP 未连接，回到上面的「缺失检查 + 自动安装」。
+1. **开启服务端口**：微信开发者工具 → `设置` → `安全设置` → `服务端口` → 开启 **「HTTP 调试」和「自动化测试」**。不开自动化端口连不上。
+2. **用命令行启动并开 WebSocket 服务**（端口默认 9420，要和 `WEAPP_WS_ENDPOINT` 一致）：
 
-## 常用能力
+   ```bash
+   # macOS
+   /Applications/wechatwebdevtools.app/Contents/MacOS/cli auto --project /path/to/project --auto-port 9420
+   # Windows
+   "C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat" auto --project C:\path\to\project --auto-port 9420
+   ```
 
-- `wechat_ide`：open / login / status / close 等 IDE 生命周期管理。
-- `wechat_automator`：start / tap / input / set_data / call_method / page_stack / page_data / storage 等自动化交互。
-- `wechat_inspector`：采集 console / CDP 运行时日志。
-- `wechat_screenshot`：界面截图（支持长图拼接），用于 UI 还原比对。
-- `wechat_navigate`：跳转页面并采集 CDP 日志。
-- `wechat_file`：读取项目信息、页面列表、页面/文件内容。
+   跨端框架记得把 `--project` 指向编译产物目录。
+3. 连接后，**先调 `mp_ensureConnection`** 验证连接并查看系统/页面信息。
+4. 也可在配置里设 `WEAPP_AUTOLAUNCH=true` + `WEAPP_PROJECT_PATH` 让它自动检测端口并启动开发者工具（首次约等 45 秒就绪，之后复用连接）。
+
+## 常用工具
+
+- 应用级：`mp_ensureConnection`（确保连接，开测前先调）、`mp_navigate`（navigateTo/redirectTo/reLaunch/switchTab/navigateBack）、`mp_screenshot`（截图）、`mp_callWx`（调 wx API）、`mp_getLogs`（控制台日志）、`mp_currentPage`（当前页路径/参数/数据）、`mp_listProjects` / `mp_setDefaultProject`。
+- 页面级：`page_getElement(s)`（按选择器取元素，支持 `[index=N]`）、`page_waitElement`（等元素出现）、`page_waitTimeout`、`page_getData` / `page_setData`（支持嵌套路径、setData 后可 verify）、`page_callMethod`。
+- 元素级：`element_tap`（点击，支持坐标偏移、点击后校验路径变化）、`element_input`、`element_callMethod`、`element_getData` / `element_setData`、`element_getWxml`、`element_getStyles`、`element_getAttributes`、`element_scrollTo`、`element_getBoundingClientRect`、`element_getInnerElement(s)`。
 
 ## 执行每条用例
 
 按阶段 5 用例逐步操作：
 
-1. 用 `wechat_navigate` 跳转到目标页面。
-2. 用 `wechat_automator` 执行操作（tap / input / 滚动）。
-3. 用 `wechat_automator` 读元素属性或页面 data，核对功能预期。
-4. 用 `wechat_inspector` 看 console/CDP 日志确认无报错。
-5. UI 还原类用例：`wechat_screenshot` 截图对照 Figma 设计稿核对关键视觉。
+1. `mp_ensureConnection` 确认连接 → `mp_navigate` 跳转到目标页面（**用绝对路径**如 `/pages/mine/mine`；tabBar 页用 `switchTab`，普通页用 `navigateTo`）。
+2. 用 `page_waitElement` / `page_waitTimeout` 等页面就绪，再用 `element_tap` / `element_input` 执行操作。
+3. 用 `page_getData` / `element_getData` 或 `mp_currentPage` 读状态，核对功能预期。
+4. 用 `mp_getLogs` 看控制台确认无报错。
+5. UI 还原类用例：`mp_screenshot` 截图对照 Figma 设计稿核对关键视觉。
+
+## 操作自定义组件
+
+`page_waitElement` 不适用于自定义组件内部元素。处理组件内元素用：
+
+- `element_tap` / `element_input` / `element_getWxml` 等支持传 `innerSelector`：`{ "selector": "#my-component", "innerSelector": ".inner-button" }`。
+- 或用 `element_getInnerElement(s)` 配合 `targetSelector` 查询。
+- 需要"等"组件内元素时，用 `page_waitTimeout` 配合元素查询轮询，而不是 `page_waitElement`。
 
 ## 发现问题 → 自愈
 
@@ -76,5 +77,5 @@ uv tool list   # 应能看到 wechat-devtools-mcp
 ## 备注
 
 - 小程序自动化对真机能力有限制，部分原生组件（map、video、原生支付等）无法完全自动化断言。遇到这类用例，做到可自动化的部分，其余在回归文档里标注为"需人工验证"。
-- `wechat_inspector` 报"CDP 采集失败"：多半是手动开了开发者工具没监听调试端口。关掉它，改用 `wechat_ide(action='open', cdp_enabled=True)` 让它自动以调试模式启动。
+- 连不上多半是没开「自动化测试」端口，或 `WEAPP_WS_ENDPOINT` 端口和 `--auto-port` 不一致。
 - 官方参考：[微信开发者工具 CLI](https://developers.weixin.qq.com/miniprogram/dev/devtools/cli.html)、[小程序自动化 SDK](https://developers.weixin.qq.com/miniprogram/dev/devtools/auto/quick-start.html)。

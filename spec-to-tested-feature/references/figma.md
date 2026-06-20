@@ -12,25 +12,13 @@
 - 读取设计变量 / token（颜色、间距、字号变量）。
 - 导出节点为图片（png/svg），用于像素级比对。
 
-若没有任何 figma 工具，**不要假装能看到设计稿**。**先问用户是否要现在自动安装/连接 Figma MCP**，得到同意后再动手；用户也可以选择跳过设计稿、仅按需求文档开发。
+若没有任何 figma 工具，**不要假装能看到设计稿**。**默认直接装 Framelink MCP（见下），不必让用户在多个方案间选择**；用户若明确表示没有设计稿，可跳过设计稿、仅按需求文档开发。
 
-## 缺失时：自动安装 / 连接
+## 缺失时：安装 Framelink MCP（默认方案）
 
-征得用户同意后，按所用方案处理（二选一）：
+默认使用社区 Framelink MCP（npx 安装，走 Figma API token）。安装会改 agent 的 MCP 配置，动手前可简单告知用户，但无需让其在方案间二选一。
 
-**方案 A：Figma 官方 Dev Mode MCP（推荐，免装包）**
-内置在 Figma 桌面应用里，无需安装额外包，但要 Figma 付费席位且开启。让用户：更新 Figma 桌面应用 → 菜单 `Figma` → `Preferences` → 勾选 `Enable Dev Mode MCP Server`，它会在本地 `http://127.0.0.1:3845/sse` 暴露 SSE 端点。然后在 agent 的 MCP 配置里加：
-
-```jsonc
-{
-  "mcpServers": {
-    "figma-dev-mode": { "url": "http://127.0.0.1:3845/sse" }
-  }
-}
-```
-
-**方案 B：社区 Framelink MCP（npx 安装，需 Figma API token）**
-适合没有 Dev Mode 的场景。先让用户到 Figma `Settings` → `Security` → 生成 personal access token，然后配置：
+需要 Figma access token。明确告诉用户怎么拿：Figma → `Settings` → `Security` → `Personal access tokens` → 生成，权限至少给 File content 读取。拿到后配置：
 
 ```jsonc
 {
@@ -44,7 +32,9 @@
 }
 ```
 
-不要把 token 写进会被提交的文件或打印到日志。配完一般要让 agent 重新加载 MCP 配置才能看到工具。两种方案的具体形态可能随版本变化，以官方文档为准。
+不要把 token 写进会被提交的文件或打印到日志。配完一般要让 agent 重新加载 MCP 配置才能看到工具。具体形态可能随版本变化，以 [Framelink 官方文档](https://github.com/GLips/Figma-Context-MCP) 为准。
+
+> 备选：如果用户有 Figma 付费席位、偏好官方 Dev Mode MCP（免 token，内置在 Figma 桌面应用，开启后走本地 `http://127.0.0.1:3845/sse`），也可用；但**默认不主动走这条**，仅在用户明确要求时采用。
 
 ## 从用户输入里拿到定位信息
 

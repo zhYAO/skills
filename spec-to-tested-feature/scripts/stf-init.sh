@@ -28,21 +28,24 @@ else
 fi
 echo
 
-# 2. uv (needed to install the wechat miniprogram MCP)
-echo "2) uv (安装小程序 MCP 用)"
-if command -v uv >/dev/null 2>&1; then
-  ok "$(uv --version 2>&1 | head -n1)"
-  if uv tool list 2>/dev/null | grep -qi wechat-devtools-mcp; then
-    ok "wechat-devtools-mcp 已通过 uv 安装"
+# 2. Node.js (needed to run the wechat miniprogram MCP: @yfme/weapp-dev-mcp via npx)
+echo "2) Node.js / npx (运行小程序 MCP @yfme/weapp-dev-mcp 用)"
+if command -v node >/dev/null 2>&1; then
+  NODE_VER="$(node --version 2>&1)"
+  NODE_MAJOR="$(echo "$NODE_VER" | sed 's/^v\([0-9]*\).*/\1/')"
+  if [ "${NODE_MAJOR:-0}" -ge 18 ] 2>/dev/null; then
+    ok "Node.js $NODE_VER (满足 18+)"
   else
-    miss "wechat-devtools-mcp 未安装（测微信小程序时需要）"
-    note "可自动安装：uv tool install wechat-devtools-mcp --force"
-    note "装完仍需：配 WECHAT_DEVTOOLS_CLI + WECHAT_PROJECT_PATH，并在开发者工具开启服务端口"
+    miss "Node.js $NODE_VER 版本过低（weapp-dev-mcp 需要 18+）"
   fi
+  command -v npx >/dev/null 2>&1 && ok "npx 可用（weapp-dev-mcp 用 npx 直接运行，无需预装）" \
+    || miss "npx 不可用"
 else
-  miss "uv 未安装（测微信小程序时需要）"
-  note "可自动安装：pip install uv"
+  miss "Node.js 未安装（测微信小程序时需要，需 18+）"
+  note "请安装 Node.js 18+（https://nodejs.org）"
 fi
+note "小程序 MCP 走 npx -y @yfme/weapp-dev-mcp，无需全局安装，配进 agent MCP 即可。"
+note "另需：装好微信开发者工具并开启「自动化测试」端口，详见 references/miniprogram-testing.md"
 echo
 
 # 3 & 4: MCP servers (Figma / Chrome) cannot be reliably detected from a shell —
