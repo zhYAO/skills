@@ -13,7 +13,7 @@ ok()   { echo "  [OK]    $1"; }
 miss() { echo "  [MISS]  $1"; }
 note() { echo "          $1"; }
 
-echo "=== spec-to-tested-feature :: 环境检测 (stf-init) ==="
+echo "=== brd-to-feature :: 环境检测 (stf-init) ==="
 echo
 
 # 1. markitdown (command-line installable; required)

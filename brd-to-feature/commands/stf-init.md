@@ -1,8 +1,8 @@
 ---
-description: 初始化 spec-to-tested-feature skill 所需的工具（markitdown / Figma MCP / Chrome MCP / 小程序 MCP），不解析任何需求。
+description: 初始化 brd-to-feature skill 所需的工具（markitdown / Figma MCP / Chrome MCP / 小程序 MCP），不解析任何需求。
 ---
 
-请进入 **spec-to-tested-feature** skill 的 init 流程：**只初始化本 skill 依赖的工具，不要解析任何需求、不要开始开发。**
+请进入 **brd-to-feature** skill 的 init 流程：**只初始化本 skill 依赖的工具，不要解析任何需求、不要开始开发。**
 
 步骤：
 

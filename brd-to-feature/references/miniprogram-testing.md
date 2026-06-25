@@ -44,6 +44,33 @@
 3. 连接后，**先调 `mp_ensureConnection`** 验证连接并查看系统/页面信息。
 4. 也可在配置里设 `WEAPP_AUTOLAUNCH=true` + `WEAPP_PROJECT_PATH` 让它自动检测端口并启动开发者工具（首次约等 45 秒就绪，之后复用连接）。
 
+## IDE 启动 + MCP 就绪自检（测试前必做，跨端框架/原生小程序共用）
+
+进入测试前必须确认小程序 MCP 已稳定连接，按下列步骤自检；任一步失败 → 🔴 STOP（见 guardrails.md 红名单 #11）。
+
+1. **确认编译产物路径**（已在 SKILL.md §6a-编译前置确定：用户提供的 / 用户授权编译的，**不要重新猜测**）。
+2. **探测微信开发者工具 cli 路径**（**找不到就问，不要猜**）：
+   - 默认探测位置（`scripts/stf-init.sh` 的 2.5 段已做）：Windows `C:\Program Files (x86)\Tencent\微信web开发者工具\cli.bat`；macOS `/Applications/wechatwebdevtools.app/Contents/MacOS/cli`。
+   - **探测不到时** → 询问用户三选一：① 给开发者工具 cli 的绝对路径；② 用户自己手动启动 IDE + 开启自动化端口（设置 → 安全设置 → 服务端口 → 开启「HTTP 调试」和「自动化测试」）后告知"已开好"；③ 降级到纯静态分析（产物顶部标"运行通道 ⚠️ 仅静态分析"）。
+   - **禁止猜测**：不擅自改默认路径、不假设 WSL/Linux、不假设软链、不假设 IDE 已由别的方式启动。
+3. **启动开发者工具**（cli 路径已知后，路径换成探测到的真实路径）：
+   ```bash
+   "<cli 绝对路径>" auto --project <§6a 确定的产物目录> --auto-port 9420
+   ```
+4. **sleep ≥ 45 秒**（首次启动；复用连接 ≥ 5 秒）。**不要 sleep 十几秒就重连**——会过早失败。
+5. **三项探测**（须全部通过才能开测）：`9420` 端口处于 Listen；开发者工具主窗口标题含目标项目名；`mcp__weapp-dev__*` 工具 ≥ 1 个可用。
+6. **连接探测**：先调 `mp_listProjects`（不是 `mp_ensureConnection`）→ 再 `mp_ensureConnection`。
+7. **重试退避表**（连接失败时）：
+
+   | 重试次数 | sleep | 必换参数 |
+   |---------|-------|----------|
+   | 1 | 5s | `reconnect=true` |
+   | 2 | 15s | `projectSelection` |
+   | 3 | 30s | `reconnect=true + projectSelection` |
+   | 4 | 60s | **🔴 STOP 上报用户** |
+
+8. **STOP 信号**：工具消失 / 4 次重试全败 / IDE 主窗口标题不含项目名 → 报告用户，由用户决定走"等待 MCP 恢复"还是"标注降级后继续"。
+
 ## 常用工具
 
 - 应用级：`mp_ensureConnection`（确保连接，开测前先调）、`mp_navigate`（navigateTo/redirectTo/reLaunch/switchTab/navigateBack）、`mp_screenshot`（截图）、`mp_callWx`（调 wx API）、`mp_getLogs`（控制台日志）、`mp_currentPage`（当前页路径/参数/数据）、`mp_listProjects` / `mp_setDefaultProject`。
