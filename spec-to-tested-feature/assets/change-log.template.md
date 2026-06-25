@@ -2,6 +2,8 @@
 
 > 关联：docs/technical-design.md
 > 版本/commit：<commit hash 或分支>
+> 运行通道：✅ IDE + 小程序 MCP 实测 / ✅ Chrome MCP 实测 / ⚠️ 仅静态分析 + 编译产物 / ❌ 未采集
+> 任务类型：完整开发任务 / 纯分析任务 / 运行验证任务（不填则视为主流程走完整开发）
 
 ## 概述
 

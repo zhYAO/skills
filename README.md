@@ -20,7 +20,7 @@ cp -R spec-to-tested-feature /path/to/your-project/.claude/skills/
 
 | Skill | 作用 | 适用场景 |
 |-------|------|----------|
-| [spec-to-tested-feature](./spec-to-tested-feature) | 需求驱动的端到端开发工作流：解析需求文档 + Figma 设计稿 → 技术文档（卡点1）→ 开发 → 严格代码 review（卡点2）→ 测试用例 → 自动化测试自愈 → 回归文档 | 拿到需求文档/设计稿，需要"从需求到测试一条龙"完成 Web 前端或微信小程序功能开发 |
+| [spec-to-tested-feature](./spec-to-tested-feature) | 需求驱动的端到端开发工作流：解析需求文档 + Figma 设计稿 → 技术文档（卡点1）→ 开发 → 严格代码 review（卡点2）→ 测试用例 → 自动化测试自愈（带 bug 状态跟踪） → 回归文档 | 拿到需求文档/设计稿需要"从需求到测试一条龙"完成 Web 前端或微信小程序功能开发；或拿到项目路径做性能/代码/安全审计（走纯分析路径）；或修 bug / 处理报错（走 bug 修复路径，含 bug 状态机跟踪）。任务类型由 Step 0 自动识别（详见 SKILL.md）。 |
 
 ### spec-to-tested-feature
 
@@ -41,6 +41,19 @@ cp -R spec-to-tested-feature /path/to/your-project/.claude/skills/
 依赖：markitdown（脚本自动安装）、Figma MCP（读设计稿，可选）、Chrome MCP 或小程序 MCP（自动化测试，小程序推荐 [weapp-dev-mcp](https://github.com/yfmeii/weapp-dev-mcp)，基于 miniprogram-automator + WebSocket 长连接，复杂项目更抗卡）。各工具的检测/安装/token 获取详见 skill 内 `SKILL.md` 与 `references/`。
 
 产出物统一放在目标项目的 `docs/` 下：`technical-design.md`、`change-log.md`、`code-review.md`、`test-cases.md`、`test-regression.md`。
+
+## 文档模板与任务类型对应
+
+> 由 Step 0 任务类型识别决定（详见 [spec-to-tested-feature/SKILL.md](./spec-to-tested-feature/SKILL.md)）。
+
+| 任务类型 | 必出文档模板 |
+|---------|--------------|
+| 完整开发任务 | technical-design + change-log + code-review + test-cases + test-regression |
+| 纯分析任务 | analysis-report（单份主报告） |
+| 运行验证任务 | test-cases + run-verification-report |
+| bug 修复任务 | test-cases（复现 + 验收用例） + bug-tracker（状态跟踪表） + test-regression（§6 bug 修复回归章节） |
+
+模板文件均在 `assets/` 目录下，顶部均带「运行通道」必填字段，缺则视为模板不合规。
 
 ## 目录约定
 

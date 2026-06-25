@@ -45,7 +45,31 @@ else
   note "请安装 Node.js 18+（https://nodejs.org）"
 fi
 note "小程序 MCP 走 npx -y @yfme/weapp-dev-mcp，无需全局安装，配进 agent MCP 即可。"
-note "另需：装好微信开发者工具并开启「自动化测试」端口，详见 references/miniprogram-testing.md"
+echo
+
+# 2.5 微信开发者工具 + 9420 端口（小程序测试前置）
+echo "2.5) 微信开发者工具 + 9420 自动化端口 (测微信小程序时)"
+# 检测常见安装路径
+IDE_BAT=""
+for p in \
+  "C:/Program Files (x86)/Tencent/微信web开发者工具/cli.bat" \
+  "/Applications/wechatwebdevtools.app/Contents/MacOS/cli"; do
+  if [ -e "$p" ]; then IDE_BAT="$p"; break; fi
+done
+if [ -n "$IDE_BAT" ]; then ok "微信开发者工具 cli: $IDE_BAT"; else
+  miss "未找到微信开发者工具 cli"
+  note "Windows 默认: C:\\Program Files (x86)\\Tencent\\微信web开发者工具\\cli.bat"
+  note "macOS 默认: /Applications/wechatwebdevtools.app/Contents/MacOS/cli"
+  note "agent 应主动询问用户安装路径/手动启动方式，不要擅自猜测默认路径（见 SKILL.md 阶段 6b-前置 + 红名单 #13）"
+fi
+# 9420 端口（Windows 用 netstat，macOS 用 lsof）
+if command -v netstat >/dev/null 2>&1; then
+  if netstat -an 2>/dev/null | grep -q ':9420.*LISTEN'; then ok "9420 端口监听中"
+  else miss "9420 端口未监听（IDE 未启动或未开自动化端口）"; fi
+elif command -v lsof >/dev/null 2>&1; then
+  if lsof -i :9420 >/dev/null 2>&1; then ok "9420 端口监听中"
+  else miss "9420 端口未监听"; fi
+fi
 echo
 
 # 3 & 4: MCP servers (Figma / Chrome) cannot be reliably detected from a shell —

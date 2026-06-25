@@ -79,3 +79,13 @@
 - 小程序自动化对真机能力有限制，部分原生组件（map、video、原生支付等）无法完全自动化断言。遇到这类用例，做到可自动化的部分，其余在回归文档里标注为"需人工验证"。
 - 连不上多半是没开「自动化测试」端口，或 `WEAPP_WS_ENDPOINT` 端口和 `--auto-port` 不一致。
 - 官方参考：[微信开发者工具 CLI](https://developers.weixin.qq.com/miniprogram/dev/devtools/cli.html)、[小程序自动化 SDK](https://developers.weixin.qq.com/miniprogram/dev/devtools/auto/quick-start.html)。
+
+## MCP 连接失败处理
+
+按严重程度分级处理（与 SKILL.md 红名单 #11 配合）：
+
+1. **首次连接 60s 超时**：先 sleep 30s 再调 `mp_listProjects` 探测 IDE 状态（不是直接 `mp_ensureConnection` 重连）。
+2. **连接后立即关闭（Connection closed）**：可能是 IDE 弹窗未消（"未受信任项目"提示、"选择项目"对话框），请用户打开 IDE 屏幕手动确认。
+3. **MCP 工具消失**：MCP 服务端进程异常，需要用户重启会话或重新加载 MCP 配置。
+4. **连续 4 次重试仍失败**（backoff 5/15/30/60s，见 SKILL.md 阶段 6b-前置）：🔴 **STOP** 上报用户，禁止自行降级到静态分析并继续产出报告。
+5. **降级选项**：若用户明确同意降级为静态分析，**必须**在产出物顶部显式标注"运行通道：⚠️ 仅静态分析"，并在遗留事项里列出运行时复测脚本（MCP 恢复后补测）。
