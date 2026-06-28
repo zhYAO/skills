@@ -2,27 +2,34 @@
 
 用于阶段 6 测试微信小程序项目。推荐用 [`weapp-dev-mcp`](https://github.com/yfmeii/weapp-dev-mcp)（npm 包 `@yfme/weapp-dev-mcp`）：基于官方 `miniprogram-automator` SDK + WebSocket 长连接驱动微信开发者工具。相比 CLI 封装类方案，它连一次后复用同一连接、不反复启 CLI，**在复杂项目里更不容易卡死/超时**，并提供显式的超时与重试参数。工具名形如 `mp_*`（应用级）、`page_*`（页面级）、`element_*`（元素级）。
 
-## 缺失检查 + 自动安装
+## 缺失检查 + 补环境变量（插件已声明 weapp-dev）
 
-进入小程序测试前，先确认小程序 MCP 是否已连接（列出可用工具，找名字含 `mp_` / `page_` / `element_` 或 `weapp` 的）。**若没有，先问用户是否要现在自动安装**，得到同意后再装——安装会改 agent 的 MCP 配置，不要不打招呼就动。
+本插件的 `.mcp.json` 已声明小程序 MCP（`weapp-dev`，走 `npx -y @yfme/weapp-dev-mcp`），安装插件即注册——**不需要手改 agent 的 MCP 配置**。进入小程序测试前，先确认它是否已连接（列出可用工具，找名字含 `mp_` / `page_` / `element_` 或 `weapp` 的）。
 
-这个包用 npx 直接跑，无需全局安装，把它配进 agent 的 MCP 配置即可（推荐用 connect 模式连一个已经开着的开发者工具，最稳）：
+若没有这些工具，多半是**还没设端点环境变量或没启开发者工具**，而不是没装 server。处理：
 
-```jsonc
-{
-  "mcpServers": {
-    "weapp-dev": {
-      "command": "npx",
-      "args": ["-y", "@yfme/weapp-dev-mcp"],
-      "env": {
-        "WEAPP_WS_ENDPOINT": "ws://localhost:9420"
-      }
-    }
-  }
-}
-```
+1. 设环境变量 `WEAPP_WS_ENDPOINT`（`.mcp.json` 里写的是 `${WEAPP_WS_ENDPOINT}`），推荐 connect 模式连一个已经开着的开发者工具，最稳：
 
-前置要求：本地已装 Node.js 18+、装好微信开发者工具且支持命令行（`cli`/`cli.bat`）、有可在开发者工具中打开的项目。配完通常要让 agent 重新加载 MCP 配置才能看到新工具。
+   ```bash
+   export WEAPP_WS_ENDPOINT="ws://localhost:9420"
+   ```
+
+2. 设好后让 agent 重新加载 MCP 配置，再检测工具是否出现。
+
+前置要求：本地已装 Node.js 18+、装好微信开发者工具且支持命令行（`cli`/`cli.bat`）、有可在开发者工具中打开的项目。
+
+> 参考：插件声明的 server 形如下（无需手写，列出仅供理解）：
+> ```jsonc
+> {
+>   "mcpServers": {
+>     "weapp-dev": {
+>       "command": "npx",
+>       "args": ["-y", "@yfme/weapp-dev-mcp"],
+>       "env": { "WEAPP_WS_ENDPOINT": "${WEAPP_WS_ENDPOINT}" }
+>     }
+>   }
+> }
+> ```
 
 > **Claude Code 建议免确认调用**：用 Claude Code 时，工具调用的权限弹窗可能打断与开发者工具的连接、导致日志获取不连贯。可在项目 `.claude/settings.local.json` 的 `permissions.allow` 里把 `mcp__weapp-dev__*` 系列工具加进去免确认（具体工具名前缀以你 MCP 配置里的服务器名为准）。
 

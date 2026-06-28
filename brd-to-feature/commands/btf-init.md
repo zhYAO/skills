@@ -6,8 +6,8 @@ description: 初始化 brd-to-feature skill 所需的工具（markitdown / Figma
 
 步骤：
 
-1. 运行 `bash scripts/stf-init.sh`（在 skill 目录下）做一轮检测，读它打印的每项状态。
-2. 按 SKILL.md「stf-init 命令：初始化所需工具」一节逐项处理：
+1. 运行 `bash scripts/btf-init.sh`（在 skill 目录下）做一轮检测，读它打印的每项状态。
+2. 按 SKILL.md「btf-init 命令：初始化所需工具」一节逐项处理：
    - markitdown：跑 `scripts/ensure_markitdown.sh` 自动装。
    - 小程序 MCP / uv：征得我同意后自动装，并提示配环境变量、开启服务端口。
    - Figma MCP：引导我选方案，若用 Framelink 要告诉我 Figma access token 怎么拿、填哪。

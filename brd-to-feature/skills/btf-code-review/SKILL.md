@@ -1,5 +1,5 @@
 ---
-name: stf-code-review
+name: btf-code-review
 description: 【brd-to-feature 内部子 skill，仅由主流程在阶段 4 调用，用户不应直接调用】在隔离的 fork 上下文里对本次改动做严格代码审查（只读不改），把分维度结论写入 docs/code-review.md 并回传分级问题摘要。
 context: fork
 agent: general-purpose

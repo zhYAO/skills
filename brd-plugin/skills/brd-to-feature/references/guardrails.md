@@ -29,8 +29,8 @@
 |---------|---------|-----------|
 | markitdown 不存在/版本检测失败 | `bash scripts/ensure_markitdown.sh` 自动装并复检 | 报失败原因 + 手动命令给用户，**停下**（后续依赖解析结果） |
 | 需求 PDF 解析结果为空/乱码 | 判断是否扫描件或图片型 PDF | 提示用户需 OCR 或提供文字版需求，不拿空内容往下走 |
-| Figma MCP 未连接 | 默认装 Framelink（`npx -y figma-developer-mcp --stdio` + token，见 `references/figma.md`） | 用户明说无设计稿 → 仅按需求文档开发，不臆造 UI |
-| 测试 MCP（Chrome/小程序）未连接 | 按对应 reference「缺失检查 + 自动安装」处理（先征得同意） | 装不上 → 把手动步骤给用户，暂停测试不强测 |
+| Figma MCP 未连接 | 插件已声明 `figma`(Framelink)，多为没设 `FIGMA_API_KEY` → 指导用户设环境变量、重载 MCP（见 `references/figma.md`） | 用户明说无设计稿 → 仅按需求文档开发，不臆造 UI |
+| 测试 MCP（Chrome/小程序）未连接 | 小程序 `weapp-dev` 已由插件声明 → 补 `WEAPP_WS_ENDPOINT`+启开发者工具；Chrome 走浏览器扩展人工连（见对应 reference） | 仍连不上 → 把手动步骤给用户，暂停测试不强测 |
 | 项目类型判不准 | 先看跨端框架依赖再看原生结构（见 6a） | 仍不确定 → 问用户以哪个目标端为准 |
 | 跨端框架找不到打包脚本 | 读 `package.json` 的 `scripts` 找 `build:weapp`/`dev:h5` 等 | 找不到 → 停下问用户该项目怎么编目标端 |
 | 同一测试用例自愈修 3 次仍不过 | 定位 → 改 → 复测循环（设上限） | 到上限 → 报现象/已试修复/推测原因给用户决定，不强标通过 |

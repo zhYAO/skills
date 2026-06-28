@@ -1,5 +1,5 @@
 ---
-name: stf-run-tests
+name: btf-run-tests
 description: 【brd-to-feature 内部子 skill，仅由主流程在阶段 6 调用，用户不应直接调用】在隔离的 fork 上下文里逐条执行测试用例 + 自愈修复 + 维护 bug-tracker，把海量 console/network 日志挡在主上下文外，只回传通过情况与最终 bug 状态摘要。
 context: fork
 agent: general-purpose

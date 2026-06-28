@@ -20,24 +20,26 @@ allowed-tools: Read Edit Write Glob Grep Bash TaskCreate TaskUpdate Skill
 
 ## btf-init 命令：初始化所需工具
 
-当用户说 **`btf-init`** / **初始化环境** / **装一下这个 skill 需要的工具** 时，**只做环境准备，不解析任何需求、不开发**。目标：把本 skill 依赖的工具一次性检测、安装或给出获取指引（含 token 怎么拿），让后续正式流程能顺畅跑。
+当用户说 **`btf-init`** / **初始化环境** / **装一下这个插件需要的工具** 时，**只做环境准备，不解析任何需求、不开发**。目标：把本插件依赖的工具一次性检测、给出获取指引（含 token / 环境变量怎么设），让后续正式流程能顺畅跑。
 
 （命令名用 `btf-init` 而非 `init`，避免和 Claude Code 内置的 `/init` 命令冲突。）
 
-运行方式：执行 `bash scripts/btf-init.sh` 做一轮自动检测，它会打印每个工具的状态（OK / 缺失）。然后按下面的清单逐项处理。**原则：能命令行自动装的，先征得用户同意再装；只能人工做的（浏览器扩展、token），给清晰步骤和获取链接，不要假装能代办。**
+> **插件已内置 MCP 声明**：Figma（`figma` / Framelink）与小程序（`weapp-dev`）两个 MCP server 已在插件 `.mcp.json` 里声明，安装插件即注册——**不需要再手改用户的 MCP 配置**。btf-init 要做的是检测工具是否就绪、并指导用户补齐运行所需的环境变量与外部前置（token、开发者工具、浏览器扩展）。
+
+运行方式：执行 `bash scripts/btf-init.sh` 做一轮自动检测，它会打印每个工具的状态（OK / 缺失）。然后按下面的清单逐项处理。**原则：能命令行自动装的（如 markitdown）先征得用户同意再装；只能人工做的（环境变量、token、浏览器扩展、启动开发者工具），给清晰步骤和获取链接，不要假装能代办。**
 
 逐项处理：
 
 1. **markitdown（必需）** — 跑 `bash scripts/ensure_markitdown.sh`，它自动检测→安装→验证。失败则把报错和手动命令给用户。
-2. **小程序 MCP（测微信小程序需要）** — 检测有没有 `mp_*` / `page_*` / `element_*` 工具。没有就**问用户是否现在装**，同意后按 `references/miniprogram-testing.md` 的「缺失检查 + 自动安装」执行（用 `@yfme/weapp-dev-mcp`：配 MCP（`npx -y @yfme/weapp-dev-mcp` + `WEAPP_WS_ENDPOINT`）+ 命令行启动开发者工具并开启自动化端口）。
-3. **Figma MCP（按设计稿开发需要）** — 检测有没有 `figma` 工具。没有就**默认直接装 Framelink**（不必让用户在方案间二选一，见 `references/figma.md`）：`npx -y figma-developer-mcp --stdio` + **Figma access token**。明确告诉用户 token 获取路径：Figma → `Settings` → `Security` → `Personal access tokens` → 生成，权限至少给 File content 读取；拿到后填进 MCP 配置的 `FIGMA_API_KEY`，别提交进仓库或打日志。（仅当用户明确偏好官方 Dev Mode 时才改用它。）
-4. **Chrome MCP（测 Web 前端需要）** — 检测有没有 `mcp__*Chrome*` 之类工具。这个**只能人工**：引导用户装浏览器扩展并授权连接（见 `references/web-testing.md`）。
+2. **小程序 MCP（测微信小程序需要）** — server 已由插件 `.mcp.json` 声明（`weapp-dev`，走 `npx -y @yfme/weapp-dev-mcp`）。检测工具列表里有没有 `mp_*` / `page_*` / `element_*`。若没有，多半是**没设环境变量或没启开发者工具**：指导用户设 `WEAPP_WS_ENDPOINT`（如 `ws://localhost:9420`），并按 `references/miniprogram-testing.md` 启动微信开发者工具、开启自动化端口（需 Node.js 18+）。**不要去改 MCP 配置**——只补环境变量与前置。
+3. **Figma MCP（按设计稿开发需要）** — server 已由插件 `.mcp.json` 声明（`figma` / Framelink，走 `npx -y figma-developer-mcp --stdio`）。检测工具列表里有没有 `figma` 工具。若没有，多半是**没设 `FIGMA_API_KEY`**：明确告诉用户 token 获取路径：Figma → `Settings` → `Security` → `Personal access tokens` → 生成，权限至少给 File content 读取；把它设到环境变量 `FIGMA_API_KEY`（别提交进仓库或打日志），重载 MCP 即可。详见 `references/figma.md`。
+4. **Chrome MCP（测 Web 前端需要）** — 检测有没有 `mcp__*Chrome*` 之类工具。这个**只能人工**：引导用户装浏览器扩展并授权连接（见 `references/web-testing.md`）。插件不声明它（浏览器扩展不走 `.mcp.json`）。
 
 处理完后，给用户一份小结：哪些已就绪、哪些待用户操作（附下一步动作）、哪些本次用不到可跳过。**init 到此结束，不要顺势开始解析需求或开发**——正式流程由用户后续单独发起。
 
-按需选择：如果用户明确只做某一类项目（比如只测小程序），其余 MCP 可以标注"本项目用不到"，不必强求装齐。
+按需选择：如果用户明确只做某一类项目（比如只测小程序），其余 MCP 可以标注"本项目用不到"，不必强求设齐。
 
-> 关于内部子 skill：本 skill 自带两个内部子 skill（`btf-explore-project`、`btf-code-review`，随 skill 一起安装、无需额外配置或 token），只由主流程在阶段 1c/4 调用，用户不直接触发。btf-init 无需为它们做任何事，提一句让用户知道即可。
+> 关于内部子代理：本插件自带三个内部子代理（`btf-explore-project`、`btf-code-review`、`btf-run-tests`，放在插件 `agents/` 下，随插件一起安装、无需额外配置或 token），只由主流程在阶段 1c/4/6 用 Task 调用，用户不直接触发。btf-init 无需为它们做任何事，提一句让用户知道即可。
 
 ---
 
@@ -109,25 +111,25 @@ markitdown "<需求文档路径>" -o docs/requirements.md
 如果用户提供了 Figma 设计稿（链接或 file key），用 Figma MCP 读取，作为开发还原 UI 的依据。读取设计稿前先确认 Figma MCP 是否已连接：
 
 - 列出可用工具，找名字里含 `figma` 的 MCP 工具（常见能力：获取文件节点树、读取某个 frame/组件的布局与样式、导出图片、拿设计 token/变量）。
-- 若未连接 Figma MCP，**默认直接装 Framelink MCP**（`npx -y figma-developer-mcp --stdio` + Figma access token，安装与 token 获取见 `references/figma.md`），不必让用户在多个方案间选择；用户若明确说没有设计稿，可跳过、仅按需求文档开发。不要假装能看到设计稿。
+- 若工具列表里没有 `figma` 工具：server 已由插件 `.mcp.json` 声明（Framelink），通常只是**还没设 `FIGMA_API_KEY`**——指导用户设好环境变量、重载 MCP 即可（token 获取见 `references/figma.md`），不必手改 MCP 配置；用户若明确说没有设计稿，可跳过、仅按需求文档开发。不要假装能看到设计稿。
 
 读取到设计稿后，把关键信息沉淀进技术文档（阶段 2）：涉及的页面/组件清单、布局结构、间距与栅格、配色与字体 token、关键交互状态（hover/active/disabled/空态/加载/错误）、以及与现有项目组件的对应关系。开发时（阶段 3）严格对照这些还原，而不是凭印象画 UI。
 
 详见 `references/figma.md`。
 
-### 1c. 阅读整个项目（委派给 fork 子 skill）
+### 1c. 阅读整个项目（委派给子代理）
 
-解析完输入后，通读项目、建立全局认知再动手。**这一步委派给内部子 skill `btf-explore-project` 执行**——它在隔离的 fork 上下文里只读地通读项目，把几十个文件的原文挡在主上下文之外，只回传摘要，从而避免污染主流程上下文。
+解析完输入后，通读项目、建立全局认知再动手。**这一步委派给内部子代理 `btf-explore-project` 执行**——它在隔离上下文里只读地通读项目，把几十个文件的原文挡在主上下文之外，只回传摘要，从而避免污染主流程上下文。
 
-调用方式：用 Skill 工具调用 `btf-explore-project`，**参数传被分析项目根目录的绝对路径**（子任务在 fork 上下文里没有主对话的工作目录，必须靠这个绝对路径定位）。它会：
+调用方式：用 Task 工具调用子代理 `btf-explore-project`（`subagent_type: "btf-explore-project"`），**prompt 里传被分析项目根目录的绝对路径**（子代理在隔离上下文里没有主对话的工作目录，必须靠这个绝对路径定位）。它会：
 
-- 在 fork 上下文里读清技术栈/框架（含是否 Taro / uni-app 跨端框架）、目录结构、组件库与设计 token、代码风格与约定、现有测试方式；
+- 在隔离上下文里读清技术栈/框架（含是否 Taro / uni-app 跨端框架）、目录结构、组件库与设计 token、代码风格与约定、现有测试方式；
 - 把完整结论写到 **`<项目根>/docs/project-survey.md`**（写在项目自己的 `docs/` 下，用户能直接看到）；
 - 回传一段摘要（框架与目标端、可复用组件/token、必须遵守的约定、测试方式、风险点），末尾附写盘绝对路径。
 
 子任务返回后，主流程**读取 `<项目根>/docs/project-survey.md`** 作为阶段 2 写技术文档的依据。目的始终是让后续改动**贴合现有约定**、做外科手术式小改动，而不是引入与项目格格不入的新模式。
 
-> 注：`btf-explore-project` 是本 skill 的内部子 skill（`user-invocable: false`），只由本主流程调用，用户不直接触发。若运行环境不支持 `context: fork`，退化为在主上下文里按上面 6 点自行通读项目即可。
+> 注：`btf-explore-project` 是本插件的内部子代理（定义在 `agents/btf-explore-project.md`），只由本主流程用 Task 调用，用户不直接触发。若运行环境不支持子代理，退化为在主上下文里按上面 6 点自行通读项目即可。
 
 ---
 
@@ -175,17 +177,17 @@ git diff HEAD --stat  # 已跟踪文件改动的概览
 
 进入测试之前，**必须**对本次改动做一次严格的代码审查。原因：自动化测试只能覆盖被测路径，很多问题（安全、可维护性、边界遗漏、与项目约定不一致）测试发现不了，越早在测试前拦住成本越低。
 
-### 4a. 审查（委派给 fork 子 skill）
+### 4a. 审查（委派给子代理）
 
-审查动作**委派给内部子 skill `btf-code-review` 执行**——它在隔离的 fork 上下文里，用一双不被开发过程带偏的眼睛重新读 diff，既获得「第二双眼睛」的客观性，又把大量 diff 内容挡在主上下文之外。
+审查动作**委派给内部子代理 `btf-code-review` 执行**——它在隔离上下文里，用一双不被开发过程带偏的眼睛重新读 diff，既获得「第二双眼睛」的客观性，又把大量 diff 内容挡在主上下文之外。
 
-调用方式：用 Skill 工具调用 `btf-code-review`，**参数传被审查项目根目录的绝对路径**与 `docs/technical-design.md` 路径（供它对照需求一致性；fork 上下文需绝对路径定位）。它会：
+调用方式：用 Task 工具调用子代理 `btf-code-review`（`subagent_type: "btf-code-review"`），**prompt 里传被审查项目根目录的绝对路径**与 `docs/technical-design.md` 路径（供它对照需求一致性；隔离上下文需绝对路径定位）。它会：
 
 - `git status` + `git diff HEAD` 拿到本次改动（含新增文件），逐文件按六维度（需求与设计一致性 / 正确性与边界 / 安全 / 项目约定一致性 / 可维护性 / 性能）严格核对；
 - 把结论按 `assets/code-review.template.md` 写到 **`<项目根>/docs/code-review.md`**（写在项目自己的 `docs/` 下，用户能直接看到）；
 - 回传分级问题摘要——**先列阻塞级**（文件:行、问题、建议改法），再列建议级，最后给「是否存在阻塞项」的总体结论，附写盘绝对路径。
 
-> 注：`btf-code-review` 是本 skill 的内部子 skill（`user-invocable: false`），只由本主流程调用，用户不直接触发。它**只评不改**。若运行环境不支持 `context: fork`，退化为在主上下文里自己按上述六维度逐文件核对。
+> 注：`btf-code-review` 是本插件的内部子代理（定义在 `agents/btf-code-review.md`），只由本主流程用 Task 调用，用户不直接触发。它**只评不改**。若运行环境不支持子代理，退化为在主上下文里自己按上述六维度逐文件核对。
 
 ### 4b. 按分级处理（在主上下文执行修复）
 
@@ -284,18 +286,18 @@ git diff HEAD --stat  # 已跟踪文件改动的概览
 
 要点（细节以 reference 为准）：cli 路径**找不到就问、不要猜**；产物目录用 §6a 已确定的、**不要重新猜测**；首次启动 **sleep ≥ 45 秒**别过早重连；连接先 `mp_listProjects` 再 `mp_ensureConnection`；4 次重试全败 → 🔴 STOP 上报用户（见 guardrails.md #11）。原生 Web 前端无此步。
 
-### 6b + 6c. 执行测试 + 自愈（委派给 fork 子 skill）
+### 6b + 6c. 执行测试 + 自愈（委派给子代理）
 
-**前置交互全部由主流程在 6a / 6a-编译前置 / 6b-前置 完成后**（项目类型已定、目标端已问、编译产物已确认、IDE/测试 MCP 已连上），把「逐条跑用例 + 自愈修复 + 维护 bug-tracker」这段**重活委派给内部子 skill `btf-run-tests`**——测试会产生海量 console/network 日志，由它在隔离的 fork 上下文里消化，只回传通过情况与最终 bug 状态，避免污染主流程上下文；自愈是自动循环，子任务里禁用了 `AskUserQuestion`。
+**前置交互全部由主流程在 6a / 6a-编译前置 / 6b-前置 完成后**（项目类型已定、目标端已问、编译产物已确认、IDE/测试 MCP 已连上），把「逐条跑用例 + 自愈修复 + 维护 bug-tracker」这段**重活委派给内部子代理 `btf-run-tests`**——测试会产生海量 console/network 日志，由它在隔离上下文里消化，只回传通过情况与最终 bug 状态，避免污染主流程上下文；自愈是自动循环，子代理不与用户交互（不使用 `AskUserQuestion`）。
 
-调用方式：用 Skill 工具调用 `btf-run-tests`，参数传：**被测项目根目录的绝对路径**、**测试通道**（`chrome` / `miniprogram`）、**测试用例文件路径**（`<项目根>/docs/test-cases.md`）、**可运行入口**（Web 的本地 URL / 小程序已连接的开发者工具）、**任务类型**。它会：
+调用方式：用 Task 工具调用子代理 `btf-run-tests`（`subagent_type: "btf-run-tests"`），prompt 里传：**被测项目根目录的绝对路径**、**测试通道**（`chrome` / `miniprogram`）、**测试用例文件路径**（`<项目根>/docs/test-cases.md`）、**可运行入口**（Web 的本地 URL / 小程序已连接的开发者工具）、**任务类型**。它会：
 
 - 逐条执行用例并断言（Web 用 Chrome MCP，小程序用小程序 MCP；UI 还原类对照 Figma 核对视觉）；
 - 发现问题自动修复，在 `<项目根>/docs/bug-tracker.md` 走 bug 状态机（`open→in_progress→fixed→verified→closed`，对齐 `assets/bug-tracker.template.md`），改代码同步 `docs/change-log.md`；
 - 同一项修 3 次不过就停止该项自愈、标「需用户决定」；
 - 回传摘要：用例通过/失败/阻塞数、未关闭 bug 清单、**需介入事项（⚠️）**、写盘绝对路径。
 
-> 注：`btf-run-tests` 是内部子 skill（`user-invocable: false`），只由主流程调用。它**不能问用户、不连/不装 MCP、不启 IDE、不替用户假设目标端或降级**——遇到这些会回报主流程。若环境不支持 `context: fork`，退化为主流程在主上下文里按子 skill 描述的步骤自己跑。
+> 注：`btf-run-tests` 是本插件的内部子代理（定义在 `agents/btf-run-tests.md`），只由主流程用 Task 调用。它**不能问用户、不连/不装 MCP、不启 IDE、不替用户假设目标端或降级**——遇到这些会回报主流程。若环境不支持子代理，退化为主流程在主上下文里按子代理描述的步骤自己跑。
 
 ### 6d. 接子任务结果（在主上下文处理需用户介入的事项）
 
@@ -367,22 +369,23 @@ git diff HEAD --stat  # 已跟踪文件改动的概览
 
 中间产物（不一定交付给用户）：`docs/requirements.md`（markitdown 解析结果）、`docs/project-survey.md`（阶段 1c 项目勘察结论，由 `btf-explore-project` 写）。
 
-## 内部子 skill（仅主流程调用，用户不直接触发）
+## 内部子代理（仅主流程用 Task 调用，用户不直接触发）
 
-- `skills/btf-explore-project/` — 阶段 1c 的 fork 子任务：隔离上下文里只读通读项目，写 `<项目根>/docs/project-survey.md` + 回摘要（`context: fork` + `agent: Explore`）。
-- `skills/btf-code-review/` — 阶段 4 的 fork 子任务：隔离上下文里只读审查本次改动，写 `<项目根>/docs/code-review.md` + 回分级问题摘要（`context: fork`，只评不改，修复回主流程做）。
-- `skills/btf-run-tests/` — 阶段 6（6b+6c）的 fork 子任务：隔离上下文里逐条跑用例 + 自愈 + 维护 bug-tracker，海量日志不回主线，只回传通过情况与 ⚠️ 需介入事项（`context: fork`，禁用 `AskUserQuestion`；改代码自愈在子任务内做，需用户决策的回报主流程）。
+定义在插件 `agents/` 下，随插件一起安装，无需额外配置：
 
-三个子任务都接收**被分析项目根目录的绝对路径**作为参数，产物统一落在该项目的 `docs/` 下，用户在自己项目里即可看到。它们各自的交互式前置（装工具、问目标端、连 MCP、卡点）都留在主流程，子任务只做不需要用户介入的纯执行部分。
+- `agents/btf-explore-project.md` — 阶段 1c 子代理：隔离上下文里只读通读项目，写 `<项目根>/docs/project-survey.md` + 回摘要。
+- `agents/btf-code-review.md` — 阶段 4 子代理：隔离上下文里只读审查本次改动，写 `<项目根>/docs/code-review.md` + 回分级问题摘要（只评不改，修复回主流程做）。
+- `agents/btf-run-tests.md` — 阶段 6（6b+6c）子代理：隔离上下文里逐条跑用例 + 自愈 + 维护 bug-tracker，海量日志不回主线，只回传通过情况与 ⚠️ 需介入事项（不与用户交互；改代码自愈在子代理内做，需用户决策的回报主流程）。
 
-两者都设 `user-invocable: false` + `disable-model-invocation: true`，不在 `/` 菜单出现、也不会被自动触发，只由本主 skill 用 Skill 工具显式调用。环境不支持 `context: fork` 时，对应阶段退化为主上下文内联执行。
+三个子代理都接收**被分析项目根目录的绝对路径**作为 prompt 参数（用 Task 工具、`subagent_type` 指定对应代理名），产物统一落在该项目的 `docs/` 下，用户在自己项目里即可看到。它们各自的交互式前置（装工具、问目标端、连 MCP、卡点）都留在主流程，子代理只做不需要用户介入的纯执行部分。子代理由主 skill 显式用 Task 调用、不会被自动触发；环境不支持子代理时，对应阶段退化为主上下文内联执行。
 
 ## 参考文件
 
 - `references/guardrails.md` — 红灯黑名单（14 条）+ 失败兜底速查表，每阶段动手前必看。
-- `references/figma.md` — 用 Figma MCP 读取设计稿的方法与提取清单。
+- `references/figma.md` — 用 Figma MCP 读取设计稿的方法与提取清单（MCP 由插件 `.mcp.json` 声明）。
 - `references/web-testing.md` — Chrome MCP 测试 Web 前端的做法。
-- `references/miniprogram-testing.md` — 小程序 MCP 测试的做法。
+- `references/miniprogram-testing.md` — 小程序 MCP 测试的做法（MCP 由插件 `.mcp.json` 声明）。
 - `scripts/ensure_markitdown.sh` — markitdown 检测/安装/验证。
 - `scripts/btf-init.sh` — btf-init 命令的环境检测脚本。
-- `commands/btf-init.md` — Claude Code 斜杠命令 `/btf-init`（把文件放到项目或全局的 `.claude/commands/` 下即可用 `/btf-init` 触发；其它 agent 直接说 "btf-init" 走 SKILL.md 的 btf-init 流程）。命令名加前缀是为了避开内置的 `/init`。
+- 插件根 `.mcp.json` — 声明 `figma`（Framelink）与 `weapp-dev`（小程序）两个 MCP server，安装插件即注册，运行时按需要设环境变量 `FIGMA_API_KEY` / `WEAPP_WS_ENDPOINT` 即可。
+- 插件 `commands/btf-init.md` — 斜杠命令 `/btf-init`，安装插件后自动注册（命令名加前缀是为了避开内置的 `/init`）。

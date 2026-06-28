@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# stf-init: detect the tools this skill depends on and report status.
-# This script only DETECTS and reports. It does not install MCP servers or
-# touch the agent's MCP config — installation/guidance is driven by SKILL.md
-# (so the agent can ask the user before changing their environment).
+# btf-init: detect the tools this plugin depends on and report status.
+# The figma (Framelink) and weapp-dev (miniprogram) MCP servers are DECLARED by
+# the plugin's .mcp.json and registered on install — this script does NOT touch
+# the user's MCP config. It only DETECTS tools/env and reports; guidance for
+# env vars / tokens / extensions is driven by SKILL.md.
 #
-# Usage: bash scripts/stf-init.sh
+# Usage: bash scripts/btf-init.sh
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,7 +14,7 @@ ok()   { echo "  [OK]    $1"; }
 miss() { echo "  [MISS]  $1"; }
 note() { echo "          $1"; }
 
-echo "=== brd-to-feature :: 环境检测 (stf-init) ==="
+echo "=== brd-to-feature :: 环境检测 (btf-init) ==="
 echo
 
 # 1. markitdown (command-line installable; required)
@@ -72,15 +73,27 @@ elif command -v lsof >/dev/null 2>&1; then
 fi
 echo
 
-# 3 & 4: MCP servers (Figma / Chrome) cannot be reliably detected from a shell —
-# they live in the agent's MCP runtime. The agent checks its own tool list.
-echo "3) Figma MCP (按设计稿开发用) — 由 agent 检查工具列表里是否有 figma 工具"
-note "缺失指引见 references/figma.md（含 Framelink token 获取方式）"
+# 环境变量（插件 .mcp.json 已声明 figma / weapp-dev，运行时按需读取这些变量）
+echo "2.6) MCP 环境变量 (插件 .mcp.json 已声明 server，仅需设这些变量)"
+if [ -n "${FIGMA_API_KEY:-}" ]; then ok "FIGMA_API_KEY 已设"; else
+  miss "FIGMA_API_KEY 未设（按设计稿开发时需要）"
+  note "Figma → Settings → Security → Personal access tokens 生成后导出为 FIGMA_API_KEY"
+fi
+if [ -n "${WEAPP_WS_ENDPOINT:-}" ]; then ok "WEAPP_WS_ENDPOINT 已设：${WEAPP_WS_ENDPOINT}"; else
+  miss "WEAPP_WS_ENDPOINT 未设（测微信小程序时需要，如 ws://localhost:9420）"
+fi
 echo
-echo "4) Chrome MCP (测 Web 前端用) — 由 agent 检查工具列表里是否有 Chrome 工具"
+
+# 3 & 4: MCP servers live in the MCP runtime; the agent checks its own tool list.
+# figma / weapp-dev are DECLARED by the plugin's .mcp.json (no manual config edit).
+echo "3) Figma MCP (按设计稿开发用) — 插件 .mcp.json 已声明 'figma'(Framelink)；由 agent 查工具列表里是否有 figma 工具"
+note "缺失多为未设 FIGMA_API_KEY；token 获取见 references/figma.md，设好环境变量后重载 MCP"
+echo
+echo "4) Chrome MCP (测 Web 前端用) — 不走 .mcp.json；由 agent 查工具列表里是否有 Chrome 工具"
 note "只能人工连接浏览器扩展，见 references/web-testing.md"
 echo
 
 echo "=== 检测完成 ==="
-echo "命令行类（markitdown / uv / 小程序 MCP）：征得用户同意后可自动安装。"
-echo "MCP / token / 浏览器扩展：由 agent 按上述 references 给用户指引。"
+echo "markitdown：征得用户同意后可命令行自动安装。"
+echo "figma / weapp-dev MCP：插件已声明，按需设 FIGMA_API_KEY / WEAPP_WS_ENDPOINT 即可。"
+echo "Chrome 扩展 / 开发者工具：人工前置，由 agent 按上述 references 给用户指引。"

@@ -1,0 +1,22 @@
+{
+  "name": "brd-to-feature",
+  "version": "0.1.0",
+  "description": "需求驱动的端到端开发流水线：解析需求文档(+Figma 设计稿) → 技术文档(人工卡点) → 开发 → 严格代码审查(人工卡点) → 测试用例 → 自动化测试自愈(带 bug 状态跟踪) → 回归文档。测试用 Chrome MCP(Web 前端)或小程序 MCP(微信小程序)。",
+  "author": {
+    "name": "zhaoyao"
+  },
+  "homepage": "https://github.com/zhYAO/skills",
+  "repository": "https://github.com/zhYAO/skills",
+  "license": "MIT",
+  "mcpServers": "./.mcp.json",
+  "keywords": [
+    "requirements-driven-development",
+    "brd",
+    "figma",
+    "automated-testing",
+    "code-review",
+    "miniprogram",
+    "chrome-mcp",
+    "workflow"
+  ]
+}
