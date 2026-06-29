@@ -64,7 +64,8 @@ zy-skills/
 4. **自愈有上限**——同一问题修不过 N 次就停、上报，不无限重试也不强标通过。
 5. **任务类型路由**——同一 skill 按输入识别任务类型（完整开发/纯分析/运行验证/bug 修复），产对应文档，不一律套同一套。
 6. **重活下沉到 fork 子 skill**——通读项目、独立代码审查、跑测试这类「上下文重 / 需要独立视角」的活，拆成 `context: fork` 子 skill。
-7. **能 agent 自动装的绝不让用户手装，装不了的明确告诉用户怎么做**（init 脚本的总原则）。
+7. **btf-init 时 token 必须问**——figma token 是 btf-init 必问项，不能用 `${...}` 占位跳过；即使打算让用户后续自行改 MCP 配置，也必须用 `AskUserQuestion` 弹一次（贴 token / 跳过 Figma 二选一）。占位 token ≠ 通过 init。详见 `brd-to-feature/references/guardrails.md` #16。
+8. **能 agent 自动装的绝不让用户手装，装不了的明确告诉用户怎么做**（init 脚本的总原则）。
 
 ---
 
