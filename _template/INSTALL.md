@@ -33,15 +33,18 @@
 
 ## Claude Code
 
-**项目级**（推荐，团队共享）：
+**全局级（默认 · 推荐）**——装一次，所有项目可用：
 
 ```bash
-cp -R <skill-name> <你的项目根>/.claude/skills/
+mkdir -p ~/.claude/skills ~/.claude/commands
+cp -R <skill-name> ~/.claude/skills/
 # 如有斜杠命令：
-cp <skill-name>/commands/*.md <你的项目根>/.claude/commands/
+cp <skill-name>/commands/*.md ~/.claude/commands/
 ```
 
-**用户级**（个人全局）：拷到 `~/.claude/skills/`（命令拷到 `~/.claude/commands/`）。
+**项目级（可选）**——仅团队随仓库分发时用，拷到 `<你的项目根>/.claude/skills/`（命令拷到 `<项目根>/.claude/commands/`）。两者同存时项目级覆盖全局。
+
+> 个人通用工作流默认走全局；只有要把 skill 随某个项目一起提交、团队共享时才用项目级。
 
 ---
 

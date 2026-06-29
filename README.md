@@ -41,7 +41,7 @@
 
 **btf-init 命令（初始化工具）**：正式开干前可先说 `btf-init`（或 Claude Code 里用 `/btf-init` 斜杠命令，加前缀以避开内置的 `/init`）。它只准备本 skill 依赖的工具、不解析需求——**能 agent 自动装的绝不让你手装**（如 markitdown、MCP server 配置片段），**装不了的明确告诉你怎么做**（如 Figma token、Chrome 扩展）。
 
-**跨 agent 安装**：见 [brd-to-feature/INSTALL.md](./brd-to-feature/INSTALL.md)，按 Claude Code / Trae / Cursor 分别给出步骤。
+**跨 agent 安装**：见 [brd-to-feature/INSTALL.md](./brd-to-feature/INSTALL.md)，按 Claude Code / Trae / Cursor 分别给出步骤。**默认装到全局**（Claude Code 即 `~/.claude/skills/`），装一次所有项目都能 `/btf`；项目级安装仅用于团队随仓库分发的场景。
 
 **跨端框架支持**：自动识别 Taro（`@tarojs/*`）/ uni-app（`@dcloudio/*`），会先问测哪个目标端（小程序 / H5），并按项目 `package.json` 里真实的构建脚本先编译再测——小程序测试指向编译产物目录而非源码根。
 

@@ -18,7 +18,7 @@
 
 默认使用社区 Framelink MCP（npx 安装，走 Figma API token）。安装会改 agent 的 MCP 配置，动手前可简单告知用户，但无需让其在方案间二选一。
 
-需要 Figma access token。明确告诉用户怎么拿：Figma → `Settings` → `Security` → `Personal access tokens` → 生成，权限至少给 File content 读取。拿到后配置：
+需要 Figma access token。**token 用「问 + 存」流程拿（见 `commands/btf-init.md` 第 4 项）**：agent 用 `AskUserQuestion` 向用户索取 token，问题正文里**必须备注获取方式**——Figma → 右上角头像 → `Settings` → `Security` → `Personal access tokens` → `Generate new token`，权限至少给 `File content` 读取，复制（只显示一次，形如 `figd_xxx...`）。用户把 token 粘进问题输入框后，**agent 把 token 字面值直接写进** MCP 配置的 `env`（写入前给用户看并征得同意）：
 
 ```jsonc
 {
@@ -26,13 +26,13 @@
     "figma": {
       "command": "npx",
       "args": ["-y", "figma-developer-mcp", "--stdio"],
-      "env": { "FIGMA_API_KEY": "<用户的 Figma access token>" }
+      "env": { "FIGMA_API_KEY": "figd_用户填的真实token" }
     }
   }
 }
 ```
 
-不要把 token 写进会被提交的文件或打印到日志。配完一般要让 agent 重新加载 MCP 配置才能看到工具。具体形态可能随版本变化，以 [Framelink 官方文档](https://github.com/GLips/Figma-Context-MCP) 为准。
+不要让用户自己 `export` 环境变量——agent 负责保存。**token 在配置文件里是明文**：提醒用户别提交进 git、建议加 `.gitignore`，agent 也不要把 token 打到日志或回显。配完一般要让 agent 重新加载 MCP 配置才能看到工具。具体形态可能随版本变化，以 [Framelink 官方文档](https://github.com/GLips/Figma-Context-MCP) 为准。
 
 > 备选：如果用户有 Figma 付费席位、偏好官方 Dev Mode MCP（免 token，内置在 Figma 桌面应用，开启后走本地 `http://127.0.0.1:3845/sse`），也可用；但**默认不主动走这条**，仅在用户明确要求时采用。
 

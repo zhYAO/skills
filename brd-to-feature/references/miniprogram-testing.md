@@ -2,6 +2,8 @@
 
 用于阶段 6 测试微信小程序项目。推荐用 [`weapp-dev-mcp`](https://github.com/yfmeii/weapp-dev-mcp)（npm 包 `@yfme/weapp-dev-mcp`）：基于官方 `miniprogram-automator` SDK + WebSocket 长连接驱动微信开发者工具。相比 CLI 封装类方案，它连一次后复用同一连接、不反复启 CLI，**在复杂项目里更不容易卡死/超时**，并提供显式的超时与重试参数。工具名形如 `mp_*`（应用级）、`page_*`（页面级）、`element_*`（元素级）。
 
+> **先过运行时观测判定门**：进入本文前先确认任务确实需要运行时观测（视觉还原 / 交互 / 数据态 / 复现 bug），否则跳过——纯静态结构 / 文案 / 渲染条件对比靠读代码更快更准。详见 `build-and-test.md` §6·前置-0。
+
 ## 缺失检查 + 自动安装
 
 进入小程序测试前，先确认小程序 MCP 是否已连接（列出可用工具，找名字含 `mp_` / `page_` / `element_` 或 `weapp` 的）。**若没有，先问用户是否要现在自动安装**，得到同意后再装——安装会改 agent 的 MCP 配置，不要不打招呼就动。
@@ -24,9 +26,41 @@
 
 前置要求：本地已装 Node.js 18+、装好微信开发者工具且支持命令行（`cli`/`cli.bat`）、有可在开发者工具中打开的项目。配完通常要让 agent 重新加载 MCP 配置才能看到新工具。
 
-> **Claude Code 建议免确认调用**：用 Claude Code 时，工具调用的权限弹窗可能打断与开发者工具的连接、导致日志获取不连贯。可在项目 `.claude/settings.local.json` 的 `permissions.allow` 里把 `mcp__weapp-dev__*` 系列工具加进去免确认（具体工具名前缀以你 MCP 配置里的服务器名为准）。
+> **建议免确认调用**：调小程序工具时的权限弹窗会打断与开发者工具的连接、导致日志获取不连贯。所以要把 `mcp__weapp-dev__*` 全套工具加进**当前 agent 的免确认配置**——**写到哪个文件、什么格式取决于你用的是哪个 agent**：Claude Code 是全局 `~/.claude/settings.local.json` 的 `permissions.allow`，Cursor / Trae 等按各自文档（auto-approve / always-allow）。**这一步在 `btf-init` 时由 agent 按当前 agent 类型自动写入**（完整工具清单 + 按 agent 的写入位置见 `commands/btf-init.md` 第 5 项 (c)）；若 init 时跳过了，到这里补做。
+>
+> ⚠️ **权限前缀必须等于 MCP 配置里的 server 名**：本 skill server 命名为 `weapp-dev` → 权限用 `mcp__weapp-dev__*`。weapp-dev-mcp 官方 README 用的是 `mcp__weapp-dev-mcp__*`（server 名 `weapp-dev-mcp`），**前缀对不上权限不生效**——以你自己 MCP 配置里的 server 名为准。
 
 > **跨端框架（Taro / uni-app）特别注意**：开发者工具打开/连接的必须是**编译产物目录**（Taro 一般是 `dist/`，但可能被项目改过），不是 `src/` 源码根目录。务必先按项目 `package.json` 里真实的小程序构建脚本编译出产物（见 SKILL.md 的 6a-编译前置），再让开发者工具打开它。
+
+## 连接前自检：先探测端口，再决定 connect 还是 launch
+
+**别上来就裸调 `mp_ensureConnection`**——它默认走 connect 模式，假定开发者工具已经开着且自动化端口已通；现实里 IDE 经常根本没启动（用别的编辑器开发时尤其常见），裸调会直接 `CONNECT_MODE_FAILED`，白撞一次还看不出原因。先探测：
+
+```bash
+nc -z -w1 localhost 9420 && echo OPEN || echo CLOSED
+# 可选：确认 IDE 进程是否在跑（macOS/Linux）
+ps aux | grep -i wechatwebdevtools | grep -iv grep | head
+```
+
+- **OPEN** → 走 connect 模式（最稳）：`mp_listProjects` → `mp_ensureConnection`。
+- **CLOSED** → IDE 没开、或自动化服务没起（也可能是端口开过又崩了）。两种拉起方式择一：
+  1. 按下面「准备」节用 cli `auto` 手动启动后再 connect；
+  2. **让 MCP 一步自动拉起**——给 `mp_ensureConnection` 传 per-call launch 覆盖参数，最省事（本 skill 实测可用）：
+
+     ```jsonc
+     mp_ensureConnection({
+       connection: {
+         mode: "launch",
+         autoLaunch: true,
+         projectPath: "<§6a 确定的编译产物目录>",  // 跨端框架指向 dist 产物，不是 src
+         launchTimeout: 180000
+       }
+     })
+     ```
+
+     首次启动约 45 秒就绪，之后复用连接。
+
+> **自动化服务中途崩**：表现为端口 9420 关掉但 IDE 进程仍在、后续工具报 `Connection closed`。先 `mp_ensureConnection({reconnect:true})`；仍不行就重探端口，CLOSED 再用上面的 launch 覆盖参数重新拉起。
 
 ## 准备：启动开发者工具并开启自动化
 
@@ -94,6 +128,14 @@
 - `element_tap` / `element_input` / `element_getWxml` 等支持传 `innerSelector`：`{ "selector": "#my-component", "innerSelector": ".inner-button" }`。
 - 或用 `element_getInnerElement(s)` 配合 `targetSelector` 查询。
 - 需要"等"组件内元素时，用 `page_waitTimeout` 配合元素查询轮询，而不是 `page_waitElement`。
+
+## 重页面导航 / 滚动相关的坑
+
+- **重页面（如电商 PDP）`mp_navigate` 大概率报 timeout，但导航通常已经发生。** 别盯着错误重试，更别反复 `mp_currentPage` 轮询（会再次把 inspector socket 拖断）。正确节奏：**发 `mp_navigate` → 忽略 timeout → `mp_ensureConnection({reconnect:true})` → `mp_screenshot` 看落点**。
+- **tabBar 页用 `switchTab`**，对它 `redirectTo` 无效（不会跳，`activePage` 仍停在原页）。
+- **`disableScroll: true` 的页面 `wx.pageScrollTo` / `mp_callWx('pageScrollTo')` 无效**——内容在内层 `scroll-view` 里滚。要滚动找元素时：先 `page_getElements('scroll-view')` 找到主滚动容器，再 `element_scrollTo(selector, x, y)`；或直接 `page_getElement('.目标类名')` 拿 `offset` 判断有没有渲染。
+- **元素查不到 ≠ 没滚到**：`page_getElement(s)` 查的是整棵已挂载节点树（不受可视区限制）。某 class 查不到，基本是**条件没命中、压根没渲染**（如某商品 `allow_personalized=false` 时整张订制卡片不进 DOM），而非"还没滚到那里"。先据此判断功能是否真的开启，再决定要不要换数据 / 换样例参数，别白滚一通。
+- **样例入参先要齐**：分析 / 验证现有页面前，若某能力依赖特定数据态（可订制商品、有库存 SKU、特定活动），**在 6a 之后就向用户要一个能命中该态的样例 spu/sku/route/scene**，别跑到中途才发现当前数据不触发目标 UI。
 
 ## 发现问题 → 自愈
 

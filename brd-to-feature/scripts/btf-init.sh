@@ -47,9 +47,10 @@ fi
 note "小程序 MCP 走 npx -y @yfme/weapp-dev-mcp，无需全局安装，配进 agent MCP 即可。"
 echo
 
-# 2.5 微信开发者工具 + 9420 端口（小程序测试前置）
-echo "2.5) 微信开发者工具 + 9420 自动化端口 (测微信小程序时)"
-# 检测常见安装路径
+# 2.5 微信开发者工具（小程序测试前置 · init 不强制，端点连通性留到阶段 6）
+echo "2.5) 微信开发者工具 (测微信小程序时 · init 阶段仅提示，不卡)"
+note "init 不校验 9420 自动化端点是否连通——weapp-dev MCP 装好即可，端点等到阶段 6 真正打开小程序时再校验。"
+# 检测常见安装路径（仅提示，不影响 init 通过）
 IDE_BAT=""
 for p in \
   "C:/Program Files (x86)/Tencent/微信web开发者工具/cli.bat" \
@@ -57,18 +58,23 @@ for p in \
   if [ -e "$p" ]; then IDE_BAT="$p"; break; fi
 done
 if [ -n "$IDE_BAT" ]; then ok "微信开发者工具 cli: $IDE_BAT"; else
-  miss "未找到微信开发者工具 cli"
+  note "（可后补）暂未在默认路径找到微信开发者工具 cli——测小程序前再装/登录/开 9420 端口即可。"
   note "Windows 默认: C:\\Program Files (x86)\\Tencent\\微信web开发者工具\\cli.bat"
   note "macOS 默认: /Applications/wechatwebdevtools.app/Contents/MacOS/cli"
-  note "agent 应主动询问用户安装路径/手动启动方式，不要擅自猜测默认路径（见 SKILL.md 阶段 6b-前置 + 红名单 #13）"
+  note "agent 不要擅自猜测默认路径；阶段 6 用到时主动询问安装路径/启动方式（见 SKILL.md 阶段 6b-前置 + 红名单 #13）"
 fi
-# 9420 端口（Windows 用 netstat，macOS 用 lsof）
-if command -v netstat >/dev/null 2>&1; then
-  if netstat -an 2>/dev/null | grep -q ':9420.*LISTEN'; then ok "9420 端口监听中"
-  else miss "9420 端口未监听（IDE 未启动或未开自动化端口）"; fi
-elif command -v lsof >/dev/null 2>&1; then
-  if lsof -i :9420 >/dev/null 2>&1; then ok "9420 端口监听中"
-  else miss "9420 端口未监听"; fi
+# 顺手探测一次 9420 自动化端口与 IDE 进程状态（仅打印结论，不影响 init 通过）
+if command -v nc >/dev/null 2>&1; then
+  if nc -z -w1 localhost 9420 >/dev/null 2>&1; then
+    ok "自动化端口 9420: OPEN（开发者工具自动化服务在跑，阶段 6 可直接 connect）"
+  else
+    note "自动化端口 9420: CLOSED（IDE 未开/没开自动化端口——阶段 6 用到时再启动；CLOSED 时可用 mp_ensureConnection 的 launch 覆盖参数一步拉起，见 references/miniprogram-testing.md「连接前自检」）"
+  fi
+fi
+if pgrep -if "wechatwebdevtools" >/dev/null 2>&1; then
+  ok "检测到微信开发者工具进程在运行"
+else
+  note "未检测到微信开发者工具进程（阶段 6 测小程序时再启动即可）"
 fi
 echo
 

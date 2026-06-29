@@ -80,7 +80,7 @@ allowed-tools: Read Edit Write Glob Grep Bash TaskCreate TaskUpdate Skill
 | `references/guardrails.md` | 14 条红线 + 失败兜底速查表，每阶段动手前必看 |
 | `references/figma.md` | Figma MCP 读设计稿方法 |
 | `references/stages.md` | 阶段 1-5, 7 详细工作流 + 变体任务路径 |
-| `references/build-and-test.md` | 阶段 6 详细工作流（项目类型判定 / 编译前置 / IDE 自检 / 委派子 skill / 接子任务结果）|
+| `references/build-and-test.md` | 阶段 6 详细工作流（运行时观测判定门 / 项目类型判定 / 编译前置 / IDE 自检 / 委派子 skill / 接子任务结果）|
 | `references/web-testing.md` | Chrome MCP 测试 Web 前端 |
 | `references/miniprogram-testing.md` | 小程序 MCP 测试 + IDE 启动 + 4 档重试退避表 |
 | `scripts/btf-init.sh`、`scripts/ensure_markitdown.sh` | btf-init 时跑的环境检测 / markitdown 装脚本 |
