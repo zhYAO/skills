@@ -1,6 +1,6 @@
 # work-skills
 
-工作中用到的 Claude / coding agent skills 集合。每个子目录是一个**独立可取用的单元**：一个 skill 把「触发条件 + 工作流程 + 模板 + 脚本」打包成一份 `SKILL.md`，拷到目标 agent 的 skills 目录下即可用。
+用到的 skills 集合。每个子目录是一个**独立可取用的单元**：一个 skill 把「触发条件 + 工作流程 + 模板 + 脚本」打包成一份 `SKILL.md`，拷到目标 agent 的 skills 目录下即可用。
 
 > 安装与跨 agent 适配：见各 skill 自己的 `INSTALL.md`（如有）。每个 skill 的 SKILL.md 顶部 frontmatter 写明触发条件——多数 skill 凭 description 自然语言匹配自动加载；**brd-to-feature 是用户主动调用型**（`disable-model-invocation: true`），用 `/btf` 斜杠命令或显式说"用 btf"才触发，避免误加载。
 
@@ -83,4 +83,4 @@ work-skills/
     └── skills/           # 可选：内部 fork 子 skill（在隔离上下文跑重活）
 ```
 
-新增 skill 时，建一个同名目录、写好 `SKILL.md` + `INSTALL.md`，并在上方「单元列表」表格里补一行。
+新增 skill 时，**复制 `_template/` 改名**（`cp -R _template <skill-name>`），填好 `SKILL.md` + `INSTALL.md`、删掉用不到的目录，并在上方「单元列表」表格里补一行。`_template/` 以 `_` 前缀命名，只是脚手架拷贝源，不是可加载的 skill。
