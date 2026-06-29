@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# 被测项目产出物（本仓库只放模板，不收实际生成的文档）
+**/docs/technical-design.md
+**/docs/change-log.md
+**/docs/code-review.md
+**/docs/test-cases.md
+**/docs/test-regression.md
+**/docs/bug-tracker.md
+**/docs/project-survey.md
+**/docs/run-verification-report.md

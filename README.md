@@ -1,5 +1,7 @@
 # work-skills
 
+> Agent Skills（`SKILL.md` 格式）集合，跨 coding agent 取用——兼容 Claude Code / Cursor / Trae / Codex。Reusable agent skills in the open `SKILL.md` format.
+
 用到的 skills 集合。每个子目录是一个**独立可取用的单元**：一个 skill 把「触发条件 + 工作流程 + 模板 + 脚本」打包成一份 `SKILL.md`，拷到目标 agent 的 skills 目录下即可用。
 
 > 安装与跨 agent 适配：见各 skill 自己的 `INSTALL.md`（如有）。每个 skill 的 SKILL.md 顶部 frontmatter 写明触发条件——多数 skill 凭 description 自然语言匹配自动加载；**brd-to-feature 是用户主动调用型**（`disable-model-invocation: true`），用 `/btf` 斜杠命令或显式说"用 btf"才触发，避免误加载。

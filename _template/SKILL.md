@@ -1,6 +1,6 @@
 ---
-name: <skill-name>
-description: <自然语言触发器：一句话说清「做什么」+「什么场景触发」+「触发词举例」。多数 skill 凭这个字段自动匹配加载，写得越具体越不会误触发/漏触发。如果是代价大、易误触发的流水线 skill，加 disable-model-invocation: true 并删掉本句对"自动加载"的描述。>
+name: template-scaffold-placeholder
+description: 【这不是一个可用的 skill，是新增 skill 的脚手架模板，请勿安装或索引】复制本目录改名后再用（见同目录 README.md）。下面这段是填写指引——真实 description 应是自然语言触发器：一句话说清「做什么」+「什么场景触发」+「触发词举例」。多数 skill 凭这个字段自动匹配加载，写得越具体越不会误触发/漏触发。如果是代价大、易误触发的流水线 skill，加 disable-model-invocation: true 并删掉本句对"自动加载"的描述。
 # 主动调用型 skill 才加下面这行（删则为自然语言自动触发）：
 # disable-model-invocation: true
 allowed-tools: Read Edit Write Glob Grep Bash
