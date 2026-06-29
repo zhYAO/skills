@@ -13,7 +13,7 @@ allowed-tools: Read Edit Write Glob Grep Bash TaskCreate TaskUpdate Skill
 
 ---
 
-## 🛑 Cardinal rules（速记 · 完整 14 条见 `references/guardrails.md`）
+## 🛑 Cardinal rules（速记 · 完整 15 条见 `references/guardrails.md`）
 
 1. **先 init 再 /btf** — 工具未装好就跑需求 = 一路红。详见 `commands/btf-init.md`。
 2. **卡点 1 未确认不开工、卡点 2 未放行不测试** — 🔴 STOP。卡点存在的意义就是等用户点头。
@@ -77,7 +77,7 @@ allowed-tools: Read Edit Write Glob Grep Bash TaskCreate TaskUpdate Skill
 | 目录 | 用途 |
 |------|------|
 | `assets/*.template.md` | 8 份文档模板（technical-design / change-log / code-review / test-cases / test-regression / bug-tracker / analysis-report / run-verification-report） |
-| `references/guardrails.md` | 14 条红线 + 失败兜底速查表，每阶段动手前必看 |
+| `references/guardrails.md` | 15 条红线 + 失败兜底速查表，每阶段动手前必看 |
 | `references/figma.md` | Figma MCP 读设计稿方法 |
 | `references/stages.md` | 阶段 1-5, 7 详细工作流 + 变体任务路径 |
 | `references/build-and-test.md` | 阶段 6 详细工作流（运行时观测判定门 / 项目类型判定 / 编译前置 / IDE 自检 / 委派子 skill / 接子任务结果）|
